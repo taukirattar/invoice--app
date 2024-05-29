@@ -39,7 +39,7 @@ jobs:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i "$EC2_SSH_KEY" ubuntu@ec2-54-204-214-165.compute-1.amazonaws.com << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i "$EC2_SSH_KEY" ubuntu@54.204.214.165 << 'EOF'
             docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
             docker pull $DOCKER_HUB_USERNAME/my-backend-app:latest
             docker stop my-backend-app || true
