@@ -39,10 +39,9 @@ jobs:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
         run: |
-          echo "$EC2_SSH_KEY" > /tmp/ec2_ssh_key
-          chmod 600 /tmp/ec2_ssh_key
+          chmod 600 "$EC2_SSH_KEY"
 
-          ssh -o StrictHostKeyChecking=no -i /tmp/ec2_ssh_key -t ubuntu@54.204.214.165 << 'EOF'
+          ssh "$EC2_SSH_KEY" -i ubuntu@54.204.214.165 << 'EOF'
             set -x
             docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
             docker pull $DOCKER_HUB_USERNAME/my-backend-app:latest
