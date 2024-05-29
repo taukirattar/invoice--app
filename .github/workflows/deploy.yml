@@ -16,11 +16,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Log in to Docker Hub 
+      - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
@@ -37,9 +37,10 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+          DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
         run: |
           ssh -o StrictHostKeyChecking=no -i "$EC2_SSH_KEY" ec2-user@your-ec2-instance-public-dns-name << 'EOF'
-            docker login -u $DOCKER_HUB_USERNAME -p ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+            docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
             docker pull $DOCKER_HUB_USERNAME/my-backend-app:latest
             docker stop my-backend-app || true
             docker rm my-backend-app || true
