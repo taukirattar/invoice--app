@@ -3,7 +3,7 @@ name: Dev Server
 on:
   push:
     branches:
-      - master
+      - main
     tags:
       - v*
 pull_request:
