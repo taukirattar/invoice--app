@@ -1,4 +1,4 @@
-name: Dev Server
+name: Deploy Backend
 
 on:
   push:
@@ -6,10 +6,10 @@ on:
       - main
     tags:
       - v*
-pull_request:
+  pull_request:
 
 env:
-  IMAGE_NAME: prod-server
+  IMAGE_NAME: dev-server
 
 jobs:
   build:
@@ -23,7 +23,8 @@ jobs:
         shell: bash
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
       - name: Build image
         run: docker build . --file Dockerfile --tag $IMAGE_NAME
@@ -46,11 +47,17 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+
     steps:
-      - name: executing remote ssh commands using ssh key
-        uses: appleboy/ssh-action@master
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          host: ${{ secrets.DEV_SERVER_URL }}
-          username: ubuntu
-          key: ${{ secrets.DEV_SSH_KEY }}
-          script: sh deploy-backend.sh
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Run deployment script on private EC2 instance
+        run: |
+          aws ssm send-command --document-name "AWS-RunShellScript" \
+            --targets "Key=tag:Name,Values=YourPrivateInstanceName" \
+            --parameters '{"commands":["sh deploy-backend.sh"]}'
