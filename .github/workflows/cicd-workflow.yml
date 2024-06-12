@@ -1,16 +1,13 @@
-name: Deploy Backend
-
-on:
+name: prod Server
+"on":
   push:
     branches:
       - main
     tags:
       - v*
-  pull_request:
-
+  pull_request: null
 env:
-  IMAGE_NAME: dev-server
-
+  IMAGE_NAME: prod-server
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,43 +18,42 @@ jobs:
     defaults:
       run:
         shell: bash
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
+      - uses: actions/checkout@v2
       - name: Build image
         run: docker build . --file Dockerfile --tag $IMAGE_NAME
-
       - name: Log into registry
-        run: echo "${{ secrets.TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
+        run: >-
+          echo "${{ secrets.TOKEN }}" | docker login ghcr.io -u ${{ github.actor
+          }} --password-stdin
       - name: Push image
-        run: |
+        run: >
           IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
-          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/,,')
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-          [ "$VERSION" == "dev" ] && VERSION=latest
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
-          docker push $IMAGE_ID:$VERSION
 
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,./\(.\),\1,')
+
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION
+          | sed -e 's/^v//')
+
+          [ "$VERSION" == "dev" ] && VERSION=latest
+
+          echo IMAGE_ID=$IMAGE_ID
+
+          echo VERSION=$VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+
+          docker push $IMAGE_ID:$VERSION
   deploy:
     needs: build
     runs-on: ubuntu-latest
-
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: executing remote ssh commands using ssh key`
+        uses: appleboy/ssh-action@master
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Run deployment script on private EC2 instance
-        run: |
-          aws ssm send-command --document-name "AWS-RunShellScript" \
-            --targets "Key=tag:Name,Values=taukir-private" \
-            --parameters '{"commands":["sh deploy-backend.sh"]}'
+          host: "${{ secrets.DEV_SERVER_URL }}"
+          username: ubuntu
+          key: "${{ secrets.DEV_SSH_KEY }}"
+          script: sh deploy-backend.sh
