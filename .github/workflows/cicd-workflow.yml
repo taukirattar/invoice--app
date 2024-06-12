@@ -1,15 +1,15 @@
-name: prod server # Name of your GitHub Actions workflow
+name: dev server # Name of your GitHub Actions workflow
 
 on:
   push:
     branches:
-      - main # Triggered on pushes to the 'dev' branch
+      - dev # Triggered on pushes to the 'dev' branch
     tags:
       - v* # Triggered on tags starting with 'v'
   pull_request: # Triggered on pull requests
 
 env:
-  IMAGE_NAME: prod-server # Environment variable defining the Docker image name
+  IMAGE_NAME: dev-server # Environment variable defining the Docker image name
 
 jobs:
   build:
